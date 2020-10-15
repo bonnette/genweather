@@ -15,7 +15,7 @@
  * in order to get wind speed , wind gust and more.
  * From this response I extract weather data and display it in a window on a raspberry pi
  * Written by Larry Bonnette October 2020
- */
+ */ 
 
 #include "math.h"
 #include "mainwindow.h"
