@@ -50,7 +50,7 @@ void MainWindow::on_downloadButton_clicked()
     QObject::connect(&mgr, SIGNAL(finished(QNetworkReply*)), &eventLoop, SLOT(quit()));
 
     // the HTTP request to openweathermap.com
-    QNetworkRequest req( QUrl( QString("http://api.openweathermap.org/data/2.5/onecall?lat=30.22&lon=-95.36&exclude=hourly,minutely,alerts,daily&units=imperial&appid=c3f3c20cf253315f8646755291334ab0") ) );
+    QNetworkRequest req( QUrl( QString("http://api.openweathermap.org/data/2.5/onecall?lat=30.22&lon=-95.36&exclude=hourly,minutely,alerts,daily&units=imperial&appid={Add your own user key}") ) );
     QNetworkReply *reply = mgr.get(req);
     eventLoop.exec(); // blocks stack until "finished()" has been called
 
