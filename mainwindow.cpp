@@ -50,7 +50,7 @@ void MainWindow::on_downloadButton_clicked()
     QObject::connect(&mgr, SIGNAL(finished(QNetworkReply*)), &eventLoop, SLOT(quit()));
 
     // the HTTP request to openweathermap.com
-    QNetworkRequest req( QUrl( QString("http://api.openweathermap.org/data/2.5/onecall?lat=30.22&lon=-95.36&exclude=hourly,minutely,alerts,daily&units=imperial&appid={Add your own user key}") ) );
+    QNetworkRequest req( QUrl( QString("http://api.openweathermap.org/data/2.5/onecall?lat=30.22&lon=-95.36&exclude=hourly,minutely,alerts,daily&units=imperial&appid={Add you own key}") ) );
     QNetworkReply *reply = mgr.get(req);
     eventLoop.exec(); // blocks stack until "finished()" has been called
 
@@ -75,17 +75,36 @@ void MainWindow::on_downloadButton_clicked()
  *        qDebug() << "Wind Speed in MPH " << current_map["wind_speed"].toString() << endl;
  */
 
-        ui->idoortemplbl->setText(current_map["temp"].toString()); // Extract Temperature and place in label
 
-        ui->humidlbl->setText(current_map["humidity"].toString()); // Extrac humidity and place in label
+        double temp_num = current_map["temp"].toDouble();  //Convert  string to double to limit decimal places
+        QString temp_str = QString::number(temp_num, 'f', 1);  //Convert double to string to display in label the "(num,'f',2)" formats for 2 decimal places only.
+        ui->idoortemplbl->setText(temp_str + " F"); // Extract Temperature and place in label
 
-        ui->itemplbl->setText(current_map["feels_like"].toString()); // Write Minimum Temperature to label
+        ui->humidlbl->setText(current_map["humidity"].toString() + " %"); // Extrac humidity and place in label
 
-        ui->presslbl->setText(current_map["pressure"].toString()); // Write Pressure in milibars to label
+        double fltemp_num = current_map["feels_like"].toDouble();  //Convert  string to double to limit decimal places
+        QString fltemp_str = QString::number(fltemp_num, 'f', 1);  //Convert double to string to display in label the "(num,'f',2)" formats for 2 decimal places only.
+        ui->itemplbl->setText(fltemp_str + " F"); // Extract Temperature and place in label
 
-        ui->speedlbl->setText(current_map["wind_speed"].toString());
+        QString press = current_map["pressure"].toString();
+        double bpress = press.toDouble();  //Convert  string to double
+        bpress = (bpress * 0.029530); //Convert milibar to inches of mercury
+        QString npress = QString::number(bpress, 'f', 2);  //Convert double to string to display in label the "(num,'f',2)" formats for 2 decimal places only
+        ui->presslbl->setText(npress + " in");  // display pressure in inches
 
-        ui->gustlbl->setText(current_map["wind_gust"].toString());
+        double speed_num = current_map["wind_speed"].toDouble();  //Convert  string to double to limit decimal places
+        QString speed_str = QString::number(speed_num, 'f', 1);  //Convert double to string to display in label the "(num,'f',2)" formats for 2 decimal places only.
+        ui->speedlbl->setText(speed_str + " mph");
+
+        // openweathermap.com does not include gust data if it is zero so to take care of that
+        if (current_map["wind_gust"].toString() == "") {
+            ui->gustlbl->setText("Gust 0");
+        }
+        else {
+            double gust_num = current_map["wind_gust"].toDouble();  //Convert  string to double to limit decimal places
+            QString gust_str = QString::number(gust_num, 'f', 1);  //Convert double to string to display in label the "(num,'f',2)" formats for 2 decimal places only.
+            ui->gustlbl->setText("Gust " + gust_str);
+        }
 
 
         QString dir = current_map["wind_deg"].toString(); // Current wind direction
