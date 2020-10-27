@@ -50,7 +50,7 @@ void MainWindow::on_downloadButton_clicked()
     QObject::connect(&mgr, SIGNAL(finished(QNetworkReply*)), &eventLoop, SLOT(quit()));
 
     // the HTTP request to openweathermap.com
-    QNetworkRequest req( QUrl( QString("http://api.openweathermap.org/data/2.5/onecall?lat=30.22&lon=-95.36&exclude=hourly,minutely,alerts,daily&units=imperial&appid={Add you own key}") ) );
+    QNetworkRequest req( QUrl( QString("http://api.openweathermap.org/data/2.5/onecall?lat=30.22&lon=-95.36&exclude=hourly,minutely,alerts,daily&units=imperial&appid={Add you own key here}") ) );
     QNetworkReply *reply = mgr.get(req);
     eventLoop.exec(); // blocks stack until "finished()" has been called
 
@@ -91,6 +91,7 @@ void MainWindow::on_downloadButton_clicked()
         bpress = (bpress * 0.029530); //Convert milibar to inches of mercury
         QString npress = QString::number(bpress, 'f', 2);  //Convert double to string to display in label the "(num,'f',2)" formats for 2 decimal places only
         ui->presslbl->setText(npress + " in");  // display pressure in inches
+        ui->mbpress_lbl->setText(current_map["pressure"].toString() + " mb"); // Display pressure in milibars
 
         double speed_num = current_map["wind_speed"].toDouble();  //Convert  string to double to limit decimal places
         QString speed_str = QString::number(speed_num, 'f', 1);  //Convert double to string to display in label the "(num,'f',2)" formats for 2 decimal places only.
