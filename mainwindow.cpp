@@ -23,6 +23,8 @@
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
 #include <QNetworkReply>
+#include <QPixmap>
+#include <QImageReader>
 #include <QUrl>
 #include <QUrlQuery>
 #include <QJsonDocument>
@@ -36,12 +38,16 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    // Set Icon Label light grey
+    ui->icn_lbl->setStyleSheet("QLabel { background-color : lightgrey;}");
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
 }
+
+// When the download button is pressed go out to openweathermap.org and get the current weather and display it.
 
 void MainWindow::on_downloadButton_clicked()
 {
@@ -50,7 +56,7 @@ void MainWindow::on_downloadButton_clicked()
     QObject::connect(&mgr, SIGNAL(finished(QNetworkReply*)), &eventLoop, SLOT(quit()));
 
     // the HTTP request to openweathermap.com
-    QNetworkRequest req( QUrl( QString("http://api.openweathermap.org/data/2.5/onecall?lat=30.22&lon=-95.36&exclude=hourly,minutely,alerts,daily&units=imperial&appid={Add you own key here}") ) );
+    QNetworkRequest req( QUrl( QString("http://api.openweathermap.org/data/2.5/onecall?lat=30.22&lon=-95.36&exclude=hourly,minutely,alerts,daily&units={Add your own key}") ) );
     QNetworkReply *reply = mgr.get(req);
     eventLoop.exec(); // blocks stack until "finished()" has been called
 
@@ -63,18 +69,48 @@ void MainWindow::on_downloadButton_clicked()
         ui->incomingtxtlbl->setText(strReply); // Places all of the weather (JSON) text into a large label.
 
         QJsonDocument jsonResponse = QJsonDocument::fromJson(strReply.toUtf8());  //Convert JSON from website to JSON Document
-
         QJsonObject root_obj = jsonResponse.object(); // Convert JSON Doc to Object
         QVariantMap root_map = root_obj.toVariantMap(); // Create a map
         QVariantMap current_map = root_map["current"].toMap(); // key with temperature data in it is called "current" convert it to a map
+        QJsonArray wthr_arr = current_map.value("weather").toJsonArray();
+        QJsonObject wthr_obj = wthr_arr.at(0).toObject();
+        QVariantMap wthr_map = wthr_obj.toVariantMap();
 
-/*        qDebug() << "Current Temperature " << current_map["temp"].toString() << endl; // extract temperature from "current" map and display it
+/* Experiments in parsing JSON */
+
+        //qWarning() << root_map.value(QString("current"));
+        //qDebug() << current_map.value("weather");
+
+//        qDebug() << wthr_map["description"];
+//        qDebug() << wthr_map["icon"];
+//        qDebug() << wthr_map["id"];
+//        qDebug() << wthr_map["main"];
+
+
+
+        /*for (auto it = root_obj.begin(); it != root_obj.end(); it++){
+            QString myStr = "Key_> " + it.key().toUtf8() + " : Value -> ";
+            myStr.append(it.value().toString());
+            qDebug() << myStr;
+        }*/
+
+
+
+
+ /*       qDebug() << "Current Temperature " << current_map["temp"].toString() << endl; // extract temperature from "current" map and display it
  *        qDebug() << "Feels Like Temperature " << current_map["feels_like"].toString() << endl;
  *        qDebug() << "Humidity " << current_map["humidity"].toString() << endl;
  *        qDebug() << "Pressure in milibars " << current_map["pressure"].toString() << endl;
  *        qDebug() << "Wind Speed in MPH " << current_map["wind_speed"].toString() << endl;
+ *
  */
 
+//        QPixmap pixmap("http://openweathermap.org/img/wn/01d@2x.png");
+//        int w = ui->icn_lbl->width();
+//        int h = ui->icn_lbl->height();
+//        qDebug() << w;
+//        qDebug() << h;
+//        ui->icn_lbl->setPixmap(pixmap.scaled(w,h,Qt::KeepAspectRatio));
 
         double temp_num = current_map["temp"].toDouble();  //Convert  string to double to limit decimal places
         QString temp_str = QString::number(temp_num, 'f', 1);  //Convert double to string to display in label the "(num,'f',2)" formats for 2 decimal places only.
@@ -108,18 +144,20 @@ void MainWindow::on_downloadButton_clicked()
         }
 
 
-        QString dir = current_map["wind_deg"].toString(); // Current wind direction
+        QString dir = current_map["wind_deg"].toString(); // Store current wind direction in "dir"
 
         //qDebug() << dir;
+
+// The following takes the numerical number in compass degrees and converts it to N,S,E,W  text
 
         double bdir = dir.toDouble();
         // bdir = 68;
         //qDebug() << bdir;
 
-        if (bdir >= 0 && bdir < 22){
-            ui->dirlbl->setText("North");
+        if (bdir >= 0 && bdir < 22){      // This checks the compass direction is in the range designated to be "North"
+            ui->dirlbl->setText("North"); // If the wind direction meets this criteria it places "North" in the label
         }
-        else if (bdir >= 22 && bdir < 45){
+        else if (bdir >= 22 && bdir < 45){  // The next test is for "North, North East" ....... and so on......
             ui->dirlbl->setText("North NE");
         }
         else if (bdir >= 45 && bdir < 67){
@@ -168,10 +206,47 @@ void MainWindow::on_downloadButton_clicked()
 
      delete reply;
 
-}
+
+        // This is the HTTP request to get icon and weather description and display it in their respective labels.
+        // This second request has to be made to get the actual icon PNG image from openweathermap.org
+        QNetworkAccessManager* netAccManager = new QNetworkAccessManager;
+
+            /*
+             * Get the Icon from openweathermap.org then prepare it for display in a "label"
+             * the icon type is recieved in the first api request. This is decoded from the JSON recieved and
+             * is located in "wthr_map["icon"]. so we concatinate that into the network request below
+            */
+
+            QNetworkRequest request(QUrl("http://openweathermap.org/img/wn/" + wthr_map["icon"].toString() + "@2x.png"));
+
+            QNetworkReply *preply = netAccManager->get(request);
+            QEventLoop loop;
+            QObject::connect(preply,SIGNAL(finished()),&loop,SLOT(quit()));
+            loop.exec();
+            QByteArray bytes = preply->readAll();
+
+            // size and scale the icon from openweathermap.org
+
+            int w = ui->icn_lbl->width();
+            int h = ui->icn_lbl->height();
+            QImage img(w, h, QImage::Format_Indexed8);
+            img.loadFromData(bytes);
+
+            // Display the Icon
+
+            ui->icn_lbl->setPixmap(QPixmap::fromImage(img).scaled(w,h,Qt::KeepAspectRatio));
+
+            // Display the weather description recieved from openweathermap.org
+
+            ui->desc_lbl->setText(wthr_map["description"].toString());
+
+
 }
 
-void MainWindow::on_quitButton_clicked()
+
+}
+
+void MainWindow::on_quitButton_clicked()  // If the "Quit" button is pressed, end the program
 {
     this -> close();
 }
