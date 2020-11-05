@@ -56,7 +56,7 @@ void MainWindow::on_downloadButton_clicked()
     QObject::connect(&mgr, SIGNAL(finished(QNetworkReply*)), &eventLoop, SLOT(quit()));
 
     // the HTTP request to openweathermap.com
-    QNetworkRequest req( QUrl( QString("http://api.openweathermap.org/data/2.5/onecall?lat=30.22&lon=-95.36&exclude=hourly,minutely,alerts,daily&units=imperial&appid={add your openweathermap.org id}") ) );
+    QNetworkRequest req( QUrl( QString("http://api.openweathermap.org/data/2.5/onecall?lat=30.22&lon=-95.36&exclude=hourly,minutely,alerts,daily&units=imperial&appid={your own key}") ) );
     QNetworkReply *reply = mgr.get(req);
     eventLoop.exec(); // blocks stack until "finished()" has been called
 
@@ -111,6 +111,15 @@ void MainWindow::on_downloadButton_clicked()
 //        qDebug() << w;
 //        qDebug() << h;
 //        ui->icn_lbl->setPixmap(pixmap.scaled(w,h,Qt::KeepAspectRatio));
+
+        // Get time and date from openweathermap.org
+        // Convert Unix date time to standard format date time and display it in label
+
+        int unixTime = current_map["dt"].toInt();
+        QDateTime timestamp;
+        timestamp.setTime_t(unixTime);
+        //qDebug() << timestamp.toString(Qt::SystemLocaleShortDate);
+        ui->time_lbl->setText(timestamp.toString(Qt::SystemLocaleShortDate));
 
         double temp_num = current_map["temp"].toDouble();  //Convert  string to double to limit decimal places
         QString temp_str = QString::number(temp_num, 'f', 1);  //Convert double to string to display in label the "(num,'f',2)" formats for 2 decimal places only.
