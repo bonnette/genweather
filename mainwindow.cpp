@@ -56,7 +56,7 @@ void MainWindow::on_downloadButton_clicked()
     QObject::connect(&mgr, SIGNAL(finished(QNetworkReply*)), &eventLoop, SLOT(quit()));
 
     // the HTTP request to openweathermap.com
-    QNetworkRequest req( QUrl( QString("http://api.openweathermap.org/data/2.5/onecall?lat=30.22&lon=-95.36&exclude=hourly,minutely,alerts,daily&units=imperial&appid={your own key}") ) );
+    QNetworkRequest req( QUrl( QString("http://api.openweathermap.org/data/2.5/onecall?lat=30.22&lon=-95.36&exclude=hourly,minutely,alerts,daily&units=imperial&appid={Your own openweathermap key}") ) );
     QNetworkReply *reply = mgr.get(req);
     eventLoop.exec(); // blocks stack until "finished()" has been called
 
@@ -166,6 +166,9 @@ void MainWindow::on_downloadButton_clicked()
         if (bdir >= 0 && bdir < 22){      // This checks the compass direction is in the range designated to be "North"
             ui->dirlbl->setText("North"); // If the wind direction meets this criteria it places "North" in the label
         }
+        else if (bdir == 360){  // The next test if exactly "North"
+            ui->dirlbl->setText("North");
+        }
         else if (bdir >= 22 && bdir < 45){  // The next test is for "North, North East" ....... and so on......
             ui->dirlbl->setText("North NE");
         }
@@ -208,7 +211,7 @@ void MainWindow::on_downloadButton_clicked()
         else if (bdir >= 315 && bdir < 337){
             ui->dirlbl->setText("North West");
         }
-        else if (bdir >= 337 && bdir < 359){
+        else if (bdir >= 337 && bdir <= 359){
             ui->dirlbl->setText("North NW");
         }
 
